@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Result</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="container">
+    <img src="{{ url_for('static', filename='mylogo.png') }}" alt="Logo" class="logo">
+    <h1>Recommended Crop</h1>
+    {% if crop != "Error occurred! 🔁 Try Again" %}
+      <h2>{{ crop }}</h2>
+      <img src="{{ url_for('static', filename='images/' + crop + '.jpg') }}" alt="{{ crop }}" class="crop-image">
+    {% else %}
+      <h2>{{ crop }}</h2>
+    {% endif %}
+    <a href="/">🔁 Try Another</a>
+  </div>
+</body>
+</html>
