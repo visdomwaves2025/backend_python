@@ -1,0 +1,12 @@
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+requests==2.31.0
+opencv-python==4.8.1.78
+insightface
+onnxruntime
+numpy==1.24.3
+Pillow==10.1.0
+librosa==0.10.1
+soundfile==0.12.1
+scipy==1.11.4
