@@ -378,7 +378,7 @@ async def face_match(request: FaceMatchRequest):
         student_data = get_student_data(request.mob)
         
         # Extract stored image
-        stored_image_base64 = student_data.get("imageString")
+        stored_image_base64 = student_data.get("imgString")
         if not stored_image_base64:
             raise HTTPException(status_code=404, detail="No face image found for this student")
         
