@@ -3,6 +3,7 @@ Face Recognition API
 Compares captured face image with stored image from external API
 Self-contained with all face processing utilities
 """
+from typing import Optional, Dict, Any
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -42,7 +43,7 @@ class FaceMatchResponse(BaseModel):
     matched: bool
     confidence: float = 0.0
     message: str
-    studentInfo: dict = None
+    studentInfo: Optional[Dict[str, Any]] = None
     faceQuality: float = 0.0
 
 
@@ -278,7 +279,7 @@ def compare_faces(captured_image: np.ndarray, stored_image_base64: str) -> dict:
             return {
                 "matched": False,
                 "confidence": 0.0,
-                "quality": captured_result.get('quality', 0.0),
+                "quality": float(captured_result.get('quality', 0.0)),
                 "error": captured_result['error']
             }
         
@@ -286,7 +287,7 @@ def compare_faces(captured_image: np.ndarray, stored_image_base64: str) -> dict:
             return {
                 "matched": False,
                 "confidence": 0.0,
-                "quality": captured_result['quality'],
+                "quality": float(captured_result['quality']),
                 "error": f"Face quality too low: {round(captured_result['quality'] * 100)}%"
             }
         
@@ -296,7 +297,7 @@ def compare_faces(captured_image: np.ndarray, stored_image_base64: str) -> dict:
             return {
                 "matched": False,
                 "confidence": 0.0,
-                "quality": captured_result['quality'],
+                "quality": float(captured_result['quality']),
                 "error": "Invalid face embedding"
             }
         
@@ -308,7 +309,7 @@ def compare_faces(captured_image: np.ndarray, stored_image_base64: str) -> dict:
             return {
                 "matched": False,
                 "confidence": 0.0,
-                "quality": captured_result['quality'],
+                "quality": float(captured_result['quality']),
                 "error": f"Stored image error: {stored_result['error']}"
             }
         
@@ -318,7 +319,7 @@ def compare_faces(captured_image: np.ndarray, stored_image_base64: str) -> dict:
             return {
                 "matched": False,
                 "confidence": 0.0,
-                "quality": captured_result['quality'],
+                "quality": float(captured_result['quality']),
                 "error": "Invalid stored face embedding"
             }
         
@@ -327,7 +328,7 @@ def compare_faces(captured_image: np.ndarray, stored_image_base64: str) -> dict:
         
         # Matching thresholds
         MATCH_THRESHOLD = 0.35  # Distance threshold for face matching
-        MIN_CONFIDENCE = 75     # Minimum confidence percentage
+        MIN_CONFIDENCE = 70     # Minimum confidence percentage
         
         confidence = max(0, min(100, (1 - distance * 2) * 100))
         
@@ -336,13 +337,19 @@ def compare_faces(captured_image: np.ndarray, stored_image_base64: str) -> dict:
         print(f"Face comparison - Distance: {distance:.4f}, Confidence: {confidence:.2f}%")
         
         return {
-            "matched": matched,
-            "confidence": round(confidence, 2),
-            "quality": round(captured_result['quality'], 2)
+            "matched": bool(matched),
+            "confidence": float(round(confidence, 2)),
+            "quality": float(round(captured_result['quality'], 2))
         }
         
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Face comparison failed: {str(e)}")
+        print(f"Face comparison error: {str(e)}")
+        return {
+            "matched": False,
+            "confidence": 0.0,
+            "quality": 0.0,
+            "error": f"Face comparison failed: {str(e)}"
+        }
 
 
 # ============================================================================
@@ -392,36 +399,60 @@ async def face_match(request: FaceMatchRequest):
         
         # Check for errors in comparison
         if "error" in comparison_result:
-            raise HTTPException(status_code=400, detail=comparison_result["error"])
+            return FaceMatchResponse(
+                matched=False,
+                confidence=float(comparison_result.get("confidence", 0.0)),
+                faceQuality=float(comparison_result.get("quality", 0.0)),
+                message=comparison_result["error"],
+                studentInfo=None
+            )
         
         # Step 4: Prepare response
         matched = comparison_result["matched"]
-        confidence = comparison_result.get("confidence", 0.0)
-        quality = comparison_result.get("quality", 0.0)
+        confidence = float(comparison_result.get("confidence", 0.0))
+        quality = float(comparison_result.get("quality", 0.0))
+        
+        print(f"Preparing response - Matched: {matched}, Confidence: {confidence}%, Quality: {quality}")
+        
+        # Prepare student info safely
+        student_info = None
+        if matched:
+            student_info = {
+                "name": str(student_data.get("name", "")).strip(),
+                "uid": str(student_data.get("uid", "")),
+                "class": str(student_data.get("cls", "")),
+                "section": str(student_data.get("section", "")),
+                "companyName": str(student_data.get("compName", "")),
+                "branchName": str(student_data.get("branchName", ""))
+            }
         
         response = FaceMatchResponse(
             matched=matched,
             confidence=confidence,
             faceQuality=quality,
             message="Face matched successfully!" if matched else "Face does not match",
-            studentInfo={
-                "name": student_data.get("name", "").strip(),
-                "uid": student_data.get("uid"),
-                "class": student_data.get("cls"),
-                "section": student_data.get("section"),
-                "companyName": student_data.get("compName"),
-                "branchName": student_data.get("branchName")
-            } if matched else None
+            studentInfo=student_info
         )
         
-        print(f"Result: {response.message} (Confidence: {confidence}%, Quality: {quality})")
+        print(f"Result: {response.message} (Confidence: {confidence:.2f}%, Quality: {quality:.4f})")
         
         return response
         
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+        import traceback
+        error_details = f"Internal server error: {str(e)}\nTraceback: {traceback.format_exc()}"
+        print(f"ERROR: {error_details}")
+        
+        # Always return proper JSON structure even on error
+        return FaceMatchResponse(
+            matched=False,
+            confidence=0.0,
+            faceQuality=0.0,
+            message=f"Error during face matching: {str(e)}",
+            studentInfo=None
+        )
 
 
 @app.get("/health")
