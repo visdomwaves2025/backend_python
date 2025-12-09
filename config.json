@@ -1,0 +1,8 @@
+{
+  "assistant_name": "Chatbot",
+  "greeting": "Hello! I am Chatbot, your AI assistant.",
+  "version": "2.0",
+  "language": "en",
+  "voice_enabled": true,
+  "fallback_response": "I'm sorry, I didn't understand that. Can you please rephrase?"
+}

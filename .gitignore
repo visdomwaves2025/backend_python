@@ -164,3 +164,9 @@ logs/
 test_images/
 test_audio/
 test_data/
+
+# Universal Search API - Sensitive & Runtime Files
+secrets.json
+chat_sessions/
+uploads/
+temp_images/

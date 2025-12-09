@@ -1,0 +1,39 @@
+# Universal Search API - Complete Requirements
+# Install with: pip install -r requirements_US.txt
+
+# Core FastAPI Framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+python-multipart==0.0.6
+
+# HTTP Requests & Web Scraping
+requests==2.31.0
+beautifulsoup4==4.12.2
+
+# AI & Language Models
+langchain==0.1.0
+langchain-google-genai==1.0.0
+langchain-community==0.0.13
+
+# Document Processing
+pdfplumber==0.10.3
+PyMuPDF==1.23.14
+pytesseract==0.3.10
+
+# Image Processing
+Pillow==10.1.0
+
+# Data Processing
+numpy==1.24.3
+
+# Additional System Requirements:
+# 1. Tesseract OCR Engine:
+#    - Windows: Download from https://github.com/UB-Mannheim/tesseract/wiki
+#    - Linux: sudo apt install tesseract-ocr
+#    - macOS: brew install tesseract
+#
+# 2. API Keys Required:
+#    - Google Gemini API Key (for AI chat)
+#    - Tavily API Key (for web search)
+#    Update the keys in universal_search_complete.py file
